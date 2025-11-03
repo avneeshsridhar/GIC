@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "ag-grid-community": "^34.3.1",
+    "ag-grid-react": "^34.3.1",
+    "antd": "^5.28.0",
+    "axios": "^1.13.1",
+    "react-router-dom": "^7.9.5"
+  }
+}
