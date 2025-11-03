@@ -1,60 +1,82 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional
-from typing import List
-from schemas import CafeSchema, CreateCafe, UpdateCafe
-from models import Cafe
-from database import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from typing import List, Optional
+from ..database import get_db
+from ..models import Cafe
+from ..schemas import CreateCafe, UpdateCafe, CafeResponse
 
-cafe_router = APIRouter(tags=["Cafes"])
+router = APIRouter(prefix="/cafes", tags=["Cafes"])
 
-@cafe_router.get("/cafes",response_model=List[CafeSchema])
-async def get_cafes(location: Optional[str]=None,db:Session = Depends(get_db)):
-    db.query(Cafe)
+@router.get("", response_model=List[CafeResponse])
+def get_cafes(location: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    query = db.query(Cafe)
     if location:
-        cafes = cafes.filter(Cafe.location.like(f"%{location}%"))
-    return cafes.all()
+        query = query.filter(Cafe.location.ilike(f"%{location}%"))
+    cafes = query.all()
+    
+    result = []
+    for cafe in cafes:
+        result.append({
+            "id": str(cafe.id),
+            "name": cafe.name,
+            "description": cafe.description,
+            "location": cafe.location,
+            "logo": cafe.logo,
+            "employees": len(cafe.employee_assignments)
+        })
+    result.sort(key=lambda x: x['employees'], reverse=True)
+    return result
 
-@cafe_router.post("/cafes",response_model=CafeSchema)
-async def create_cafe(cafe:CreateCafe,db:Session = Depends(get_db)):
+@router.post("", response_model=CafeResponse, status_code=201)
+def create_cafe(cafe: CreateCafe, db: Session = Depends(get_db)):
     new_cafe = Cafe(
         name=cafe.name,
+        description=cafe.description,
         location=cafe.location,
-        logo=cafe.logo,
-        employees=cafe.employees
+        logo=cafe.logo
     )
     db.add(new_cafe)
     db.commit()
     db.refresh(new_cafe)
-    return new_cafe
+    return {
+        "id": str(new_cafe.id),
+        "name": new_cafe.name,
+        "description": new_cafe.description,
+        "location": new_cafe.location,
+        "logo": new_cafe.logo,
+        "employees": 0
+    }
 
-@cafe_router.put("/cafes/{cafe_id}",response_model=CafeSchema)
-async def update_cafe(cafe_id:str, cafe:UpdateCafe, db:Session = Depends(get_db)):
-    existing_cafe = db.query(Cafe).filter(Cafe.id == cafe_id).first()
-    if not existing_cafe:
+@router.put("/{cafe_id}", response_model=CafeResponse)
+def update_cafe(cafe_id: str, cafe_data: UpdateCafe, db: Session = Depends(get_db)):
+    cafe = db.query(Cafe).filter(Cafe.id == cafe_id).first()
+    if not cafe:
         raise HTTPException(status_code=404, detail="Cafe not found")
-    else:
-        if cafe.name is not None:
-            existing_cafe.name = cafe.name
-        if cafe.location is not None:
-            existing_cafe.location = cafe.location
-        if cafe.logo is not None:
-            existing_cafe.logo = cafe.logo
-        if cafe.employees is not None:
-            existing_cafe.employees = cafe.employees
+    
+    if cafe_data.name is not None:
+        cafe.name = cafe_data.name
+    if cafe_data.description is not None:
+        cafe.description = cafe_data.description
+    if cafe_data.location is not None:
+        cafe.location = cafe_data.location
+    if cafe_data.logo is not None:
+        cafe.logo = cafe_data.logo
+    
     db.commit()
-    db.refresh(existing_cafe)
-    return existing_cafe
+    db.refresh(cafe)
+    return {
+        "id": str(cafe.id),
+        "name": cafe.name,
+        "description": cafe.description,
+        "location": cafe.location,
+        "logo": cafe.logo,
+        "employees": len(cafe.employee_assignments)
+    }
 
-@cafe_router.delete('/cafes/{cafe_id}')
-async def delete_cafe(cafe_id:int, db:Session = Depends(get_db), response_model=CafeSchema):
-    existing_cafe=db.query(Cafe).filter(Cafe.id==cafe_id).first()
-    if not existing_cafe:
+@router.delete("/{cafe_id}", status_code=204)
+def delete_cafe(cafe_id: str, db: Session = Depends(get_db)):
+    cafe = db.query(Cafe).filter(Cafe.id == cafe_id).first()
+    if not cafe:
         raise HTTPException(status_code=404, detail="Cafe not found")
-    else:
-        db.delete(existing_cafe)
-        db.commit()
-        return existing_cafe
-
-
-
+    db.delete(cafe)
+    db.commit()

@@ -1,35 +1,41 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { Layout, Menu } from 'antd';
+import CafesPage from './pages/CafePage';
+import EmployeesPage from './pages/EmployeePage';
+import AddEditCafePage from './pages/AddEditCafe';
+import AddEditEmployeePage from './pages/AddEditEmployee';
+import 'antd/dist/reset.css';
+
+const { Header, Content } = Layout;
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <BrowserRouter>
+      <Layout>
+        <Header>
+          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['cafes']}>
+            <Menu.Item key="cafes">
+              <Link to="/">Cafes</Link>
+            </Menu.Item>
+            <Menu.Item key="employees">
+              <Link to="/employees">Employees</Link>
+            </Menu.Item>
+          </Menu>
+        </Header>
+        <Content style={{ padding: 20 }}>
+          <Routes>
+            <Route path="/" element={<CafesPage />} />
+            <Route path="/cafes/add" element={<AddEditCafePage />} />
+            <Route path="/cafes/edit/:id" element={<AddEditCafePage />} />
+            <Route path="/employees" element={<EmployeesPage />} />
+            <Route path="/employees/add" element={<AddEditEmployeePage />} />
+            <Route path="/employees/edit/:id" element={<AddEditEmployeePage />} />
+          </Routes>
+        </Content>
+      </Layout>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

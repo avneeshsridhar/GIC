@@ -1,125 +1,134 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
-from datetime import datetime
-import string
-import random
-from database import get_db
-from models import employees, Cafe, EmployeeCafe
-from schemas import CreateEmployee, UpdateEmployee
+from typing import List, Optional
+from datetime import date
+from ..database import get_db
+from ..models import Employee, EmployeeCafe, Cafe
+from ..schemas import CreateEmployee, UpdateEmployee, EmployeeResponse
+from ..utils.helper import generate_employee_id, calculate_days_worked
 
-employee_router = APIRouter(tags=["Employee"])
+router = APIRouter(prefix="/employees", tags=["Employees"])
 
-def generate_employee_id(db: Session) -> str:
-    while True:
-        random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
-        employee_id = f"UI{random_part}"
-        if not db.query(employees).filter(employees.id == employee_id).first():
-            return employee_id
-
-@employee_router.get('/employees')
-async def get_employees(cafe: Optional[str] = None, db: Session = Depends(get_db)):
-    all_employees = db.query(employees).all()
-    
+@router.get("", response_model=List[EmployeeResponse])
+def get_employees(cafe: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    employees = db.query(Employee).all()
     result = []
-    for emp in all_employees:
-        assignment = db.query(EmployeeCafe).filter(EmployeeCafe.employee_id == emp.id).first()
-        
-        cafe_name = ""
+    for employee in employees:
+        assignment = employee.cafe_assignment
+        cafe_name = None
         days_worked = 0
         
         if assignment:
-            cafe_obj = db.query(Cafe).filter(Cafe.id == assignment.cafe_id).first()
-            if cafe_obj:
-                cafe_name = cafe_obj.name
-                days_worked = (datetime.now().date() - assignment.start_date).days
-        
-        if cafe and cafe_name != cafe:
-            continue
+            cafe_name = assignment.cafe.name
+            if cafe and cafe_name != cafe:
+                continue
+            days_worked = calculate_days_worked(assignment.start_date)
+        else:
+            if cafe:
+                continue
         
         result.append({
-            'id': emp.id,
-            'name': emp.name,
-            'email_address': emp.email_address,
-            'phone_number': emp.phone_number,
-            'days_worked': days_worked,
-            'cafe': cafe_name
+            "id": employee.id,
+            "name": employee.name,
+            "email_address": employee.email_address,
+            "phone_number": employee.phone_number,
+            "gender": employee.gender,
+            "days_worked": days_worked,
+            "cafe": cafe_name or ""
         })
-    
+    result.sort(key=lambda x: x['days_worked'], reverse=True)
     return result
 
-@employee_router.post('/employees')
-async def create_employee(employee: CreateEmployee, db: Session = Depends(get_db)):
-    
-    employee_id = generate_employee_id(db)
-    
-    new_employee = employees(
+@router.post("", response_model=EmployeeResponse, status_code=201)
+def create_employee(employee_data: CreateEmployee, db: Session = Depends(get_db)):
+    employee_id = generate_employee_id()
+    new_employee = Employee(
         id=employee_id,
-        name=employee.name,
-        email_address=employee.email_address,
-        phone_number=employee.phone_number,
-        gender=employee.gender
+        name=employee_data.name,
+        email_address=employee_data.email_address,
+        phone_number=employee_data.phone_number,
+        gender=employee_data.gender
     )
-    
     db.add(new_employee)
     db.commit()
-    db.refresh(new_employee)
     
-    if employee.cafe_id:
-        assignment = EmployeeCafe(
-            employee_id=employee_id,
-            cafe_id=employee.cafe_id,
-            start_date=datetime.now().date()
-        )
-        db.add(assignment)
-        db.commit()
+    cafe_name = None
+    if employee_data.cafe_id:
+        cafe = db.query(Cafe).filter(Cafe.id == employee_data.cafe_id).first()
+        if cafe:
+            assignment = EmployeeCafe(
+                employee_id=employee_id,
+                cafe_id=employee_data.cafe_id,
+                start_date=date.today()
+            )
+            db.add(assignment)
+            db.commit()
+            cafe_name = cafe.name
     
     return {
-        'id': new_employee.id,
-        'name': new_employee.name,
-        'email_address': new_employee.email_address,
-        'phone_number': new_employee.phone_number,
-        'gender': new_employee.gender
+        "id": employee_id,
+        "name": new_employee.name,
+        "email_address": new_employee.email_address,
+        "phone_number": new_employee.phone_number,
+        "gender": new_employee.gender,
+        "days_worked": 0,
+        "cafe": cafe_name or ""
     }
 
-@employee_router.put('/employees/{employee_id}')
-async def update_employee(employee_id: str, employee: UpdateEmployee, db: Session = Depends(get_db)):
-    """Update employee details"""
-    
-    # Find employee
-    emp = db.query(employees).filter(employees.id == employee_id).first()
-    if not emp:
+@router.put("/{employee_id}", response_model=EmployeeResponse)
+def update_employee(employee_id: str, employee_data: UpdateEmployee, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     
-    # Update fields if provided
-    if employee.name:
-        emp.name = employee.name
-    if employee.email_address:
-        emp.email_address = employee.email_address
-    if employee.phone_number:
-        emp.phone_number = employee.phone_number
-    if employee.gender:
-        emp.gender = employee.gender
-    
+    if employee_data.name is not None:
+        employee.name = employee_data.name
+    if employee_data.email_address is not None:
+        employee.email_address = employee_data.email_address
+    if employee_data.phone_number is not None:
+        employee.phone_number = employee_data.phone_number
+    if employee_data.gender is not None:
+        employee.gender = employee_data.gender
     db.commit()
-    return {"message": "Employee updated", "id": employee_id}
+    
+    cafe_name = None
+    days_worked = 0
+    if employee_data.cafe_id is not None:
+        old_assignment = db.query(EmployeeCafe).filter(EmployeeCafe.employee_id == employee_id).first()
+        if old_assignment:
+            db.delete(old_assignment)
+        
+        if employee_data.cafe_id:
+            cafe = db.query(Cafe).filter(Cafe.id == employee_data.cafe_id).first()
+            if cafe:
+                new_assignment = EmployeeCafe(
+                    employee_id=employee_id,
+                    cafe_id=employee_data.cafe_id,
+                    start_date=date.today()
+                )
+                db.add(new_assignment)
+                cafe_name = cafe.name
+        db.commit()
+    else:
+        assignment = employee.cafe_assignment
+        if assignment:
+            cafe_name = assignment.cafe.name
+            days_worked = calculate_days_worked(assignment.start_date)
+    
+    return {
+        "id": employee.id,
+        "name": employee.name,
+        "email_address": employee.email_address,
+        "phone_number": employee.phone_number,
+        "gender": employee.gender,
+        "days_worked": days_worked,
+        "cafe": cafe_name or ""
+    }
 
-@employee_router.delete('/employees/{employee_id}')
-async def delete_employee(employee_id: str, db: Session = Depends(get_db)):
-    """Delete employee"""
-    
-    # Find employee
-    emp = db.query(employees).filter(employees.id == employee_id).first()
-    if not emp:
+@router.delete("/{employee_id}", status_code=204)
+def delete_employee(employee_id: str, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
-    
-    # Delete assignment if exists
-    assignment = db.query(EmployeeCafe).filter(EmployeeCafe.employee_id == employee_id).first()
-    if assignment:
-        db.delete(assignment)
-    
-    # Delete employee
-    db.delete(emp)
+    db.delete(employee)
     db.commit()
-    
-    return {"message": "Employee deleted", "id": employee_id}
