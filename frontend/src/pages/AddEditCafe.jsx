@@ -76,9 +76,9 @@ function AddEditCafePage() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 600 }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
       <h2>{id ? 'Edit Cafe' : 'Add Cafe'}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
         <ReusableTextBox
           label="Name (6-10 chars)"
           value={name}

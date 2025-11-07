@@ -25,8 +25,11 @@ function AddEditEmployeePage() {
           setEmail(employee.email_address);
           setPhone(employee.phone_number);
           setGender(employee.gender);
-          const cafe = response.data.find(c => c.name === employee.cafe);
-          setCafeId(cafe ? cafe.id : '');
+          // Get the cafe from the cafes state or fetch it
+          getCafes().then(cafesResponse => {
+            const cafe = cafesResponse.data.find(c => c.name === employee.cafe);
+            setCafeId(cafe ? cafe.id : '');
+          });
         }
       });
     }
@@ -69,9 +72,9 @@ function AddEditEmployeePage() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 600 }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
       <h2>{id ? 'Edit Employee' : 'Add Employee'}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
         <ReusableTextBox
           label="Name (6-10 chars)"
           value={name}

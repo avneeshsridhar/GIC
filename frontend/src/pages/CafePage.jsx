@@ -34,12 +34,12 @@ function CafesPage() {
   };
 
   const columnDefs = [
-    { field: 'logo', width: 100 },
-    { field: 'name', width: 150 },
-    { field: 'description', width: 300 },
+    { field: 'logo', flex: 0.5 },
+    { field: 'name', flex: 1 },
+    { field: 'description', flex: 2 },
     { 
       field: 'employees', 
-      width: 120,
+      flex: 0.7,
       cellRenderer: (params) => (
         <span 
           onClick={() => navigate(`/employees?cafe=${params.data.name}`)} 
@@ -49,10 +49,10 @@ function CafesPage() {
         </span>
       )
     },
-    { field: 'location', width: 150 },
+    { field: 'location', flex: 1 },
     {
       headerName: 'Actions',
-      width: 200,
+      flex: 1,
       cellRenderer: (params) => (
         <div>
           <Button size="small" onClick={() => navigate(`/cafes/edit/${params.data.id}`)} style={{ marginRight: 8 }}>Edit</Button>
@@ -63,15 +63,21 @@ function CafesPage() {
   ];
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
       <h1>Cafes</h1>
       <div style={{ marginBottom: 20 }}>
         <Input placeholder="Filter by location" value={location} onChange={(e) => setLocation(e.target.value)} style={{ width: 200, marginRight: 10 }} />
         <Button type="primary" onClick={() => navigate('/cafes/add')}>Add New Cafe</Button>
       </div>
-      <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
-        <AgGridReact rowData={cafes} columnDefs={columnDefs} />
-      </div>
+      {cafes.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+          <h3>No cafes found</h3>
+        </div>
+      ) : (
+        <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
+          <AgGridReact rowData={cafes} columnDefs={columnDefs} />
+        </div>
+      )}
     </div>
   );
 }

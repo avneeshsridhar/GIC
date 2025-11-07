@@ -35,15 +35,15 @@ function EmployeesPage() {
   };
 
   const columnDefs = [
-    { field: 'id', width: 120 },
-    { field: 'name', width: 130 },
-    { field: 'email_address', headerName: 'Email', width: 220 },
-    { field: 'phone_number', headerName: 'Phone', width: 130 },
-    { field: 'days_worked', headerName: 'Days Worked', width: 140 },
-    { field: 'cafe', width: 150 },
+    { field: 'id', flex: 1 },
+    { field: 'name', flex: 1 },
+    { field: 'email_address', headerName: 'Email', flex: 1.5 },
+    { field: 'phone_number', headerName: 'Phone', flex: 1 },
+    { field: 'days_worked', headerName: 'Days Worked', flex: 1 },
+    { field: 'cafe', flex: 1 },
     {
       headerName: 'Actions',
-      width: 200,
+      flex: 1,
       cellRenderer: (params) => (
         <div>
           <Button size="small" onClick={() => navigate(`/employees/edit/${params.data.id}`)} style={{ marginRight: 8 }}>Edit</Button>
@@ -54,14 +54,20 @@ function EmployeesPage() {
   ];
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
       <h1>Employees {cafeFilter && `- ${cafeFilter}`}</h1>
       <div style={{ marginBottom: 20 }}>
         <Button type="primary" onClick={() => navigate('/employees/add')}>Add New Employee</Button>
       </div>
-      <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
-        <AgGridReact rowData={employees} columnDefs={columnDefs} />
-      </div>
+      {employees.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+          <h3>No employees found</h3>
+        </div>
+      ) : (
+        <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
+          <AgGridReact rowData={employees} columnDefs={columnDefs} />
+        </div>
+      )}
     </div>
   );
 }
