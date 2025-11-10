@@ -61,7 +61,7 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-color: #fafafa;
   }
   a:hover {
     color: #747bff;
@@ -69,4 +69,51 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+body {
+  background-color: #fafafa;
+}
+
+/* Table styling improvements */
+.ag-theme-alpine {
+  border-radius: 8px;
+  box-shadow: none;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+}
+
+.ag-theme-alpine .ag-header {
+  background-color: #fafafa;
+  font-weight: 600;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.ag-theme-alpine .ag-header-cell {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.ag-theme-alpine .ag-cell {
+  padding-left: 16px;
+  padding-right: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.ag-theme-alpine .ag-row {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ag-theme-alpine .ag-row:hover {
+  background-color: #f8f8f8;
+}
+
+.ag-theme-alpine .ag-row:last-child {
+  border-bottom: none;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }

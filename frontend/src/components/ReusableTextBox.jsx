@@ -4,7 +4,7 @@ import { Input } from 'antd';
 function ReusableTextBox({ label, value, onChange, required, minLength, maxLength, type = "text", pattern }) {
   return (
     <div style={{ marginBottom: 15 }}>
-      <label style={{ display: 'block', marginBottom: 5 }}>
+      <label style={{ display: 'block', marginBottom: 5, color: '#000' }}>
         {label} {required && <span style={{ color: 'red' }}>*</span>}
       </label>
       <Input

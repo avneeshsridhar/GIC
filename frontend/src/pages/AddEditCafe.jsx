@@ -77,7 +77,7 @@ function AddEditCafePage() {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-      <h2>{id ? 'Edit Cafe' : 'Add Cafe'}</h2>
+      <h2 style={{ color: '#000' }}>{id ? 'Edit Cafe' : 'Add Cafe'}</h2>
       <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
         <ReusableTextBox
           label="Name (6-10 chars)"
@@ -88,7 +88,7 @@ function AddEditCafePage() {
           maxLength={10}
         />
         <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Description (max 256) <span style={{ color: 'red' }}>*</span></label>
+          <label style={{ display: 'block', marginBottom: 5, color: '#000' }}>Description (max 256) <span style={{ color: 'red' }}>*</span></label>
           <TextArea
             rows={4}
             value={description}
@@ -104,7 +104,7 @@ function AddEditCafePage() {
           required
         />
         <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Logo (max 2MB)</label>
+          <label style={{ display: 'block', marginBottom: 5, color: '#000' }}>Logo (max 2MB)</label>
           <input type="file" accept="image/*" onChange={handleFileChange} />
         </div>
         <Button type="primary" htmlType="submit" style={{ marginRight: 10 }}>{id ? 'Update' : 'Create'}</Button>

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: "postgresql://postgres.yqxevxdakwfplezihrag:GiCDatabase43$$@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+      ALLOWED_ORIGINS: "http://100.42.188.235"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

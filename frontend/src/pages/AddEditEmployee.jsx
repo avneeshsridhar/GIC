@@ -73,7 +73,7 @@ function AddEditEmployeePage() {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-      <h2>{id ? 'Edit Employee' : 'Add Employee'}</h2>
+      <h2 style={{ color: '#000' }}>{id ? 'Edit Employee' : 'Add Employee'}</h2>
       <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
         <ReusableTextBox
           label="Name (6-10 chars)"
@@ -98,14 +98,14 @@ function AddEditEmployeePage() {
           pattern="[89]\d{7}"
         />
         <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Gender <span style={{ color: 'red' }}>*</span></label>
+          <label style={{ display: 'block', marginBottom: 5, color: '#000' }}>Gender <span style={{ color: 'red' }}>*</span></label>
           <Radio.Group value={gender} onChange={(e) => { setGender(e.target.value); setIsDirty(true); }}>
             <Radio value="Male">Male</Radio>
             <Radio value="Female">Female</Radio>
           </Radio.Group>
         </div>
         <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Assign to Cafe</label>
+          <label style={{ display: 'block', marginBottom: 5, color: '#000' }}>Assign to Cafe</label>
           <Select value={cafeId} onChange={(value) => { setCafeId(value); setIsDirty(true); }} allowClear placeholder="-- None --" style={{ width: '100%' }}>
             {cafes.map(cafe => (
               <Select.Option key={cafe.id} value={cafe.id}>{cafe.name}</Select.Option>

@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';  
+// Get API base URL from environment, fallback to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,
 });
 
+// Cafe API functions
 export const getCafes = (location = '') => {
   const params = location ? { location } : {};
   return api.get('/cafes', { params });
@@ -24,5 +27,6 @@ export const getEmployees = (cafe = '') => {
 export const createEmployee = (data) => api.post('/employees', data);
 export const updateEmployee = (id, data) => api.put(`/employees/${id}`, data);
 export const deleteEmployee = (id) => api.delete(`/employees/${id}`);
+
 
 export default api;
