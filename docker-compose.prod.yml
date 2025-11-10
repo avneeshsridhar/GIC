@@ -1,11 +1,23 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-cafedb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: "postgresql://postgres.yqxevxdakwfplezihrag:GiCDatabase43$$@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
-      ALLOWED_ORIGINS: "http://100.42.188.235"
+      DATABASE_URL: postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-cafedb}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+    depends_on:
+      - db
     restart: unless-stopped
     networks:
       - app-network
@@ -19,6 +31,9 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+
+volumes:
+  postgres_data:
 
 networks:
   app-network:
